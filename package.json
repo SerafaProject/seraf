@@ -1,0 +1,37 @@
+{
+  "name": "seraf",
+  "version": "2.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": {
+    "seraf": "./build/index.js"
+  },
+  "scripts": {
+    "start:dev": "npx nodemon",
+    "start": "npm run build && node build/index.js",
+    "build": "rimraf ./build && tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cli",
+    "npmtool"
+  ],
+  "author": "SerafProject",
+  "license": "MIT",
+  "repository": "https://github.com/SerafaProject/seraf",
+  "homepage": "https://github.com/SerafaProject/seraf/readme",
+  "devDependencies": {
+    "@types/figlet": "^1.5.8",
+    "@types/node": "^20.11.24",
+    "@types/prompts": "^2.4.9",
+    "nodemon": "^3.1.0",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "figlet": "^1.7.0",
+    "path": "^0.12.7",
+    "prompts": "^2.4.2"
+  }
+}
