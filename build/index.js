@@ -48,34 +48,105 @@ var initSerafProject_1 = require("./initSerafProject");
 console.log(figlet_1.default.textSync("Seraf"));
 var program = new commander_1.Command();
 program
-    .name('string-util')
-    .description('CLI to some JavaScript string utilities')
+    .name('seraf')
+    .description('CLI to build and scaffold javascript applications')
     .version('0.8.0');
-program.command('init')
+program.command('create')
     .description('Initiate a SerafProject')
-    .option('--first', 'display just the first substring')
-    .option('-s, --separator <char>', 'separator character', ',')
-    .action(function (argument, options) { return __awaiter(void 0, void 0, void 0, function () {
-    var projectName;
+    // .option('--first', 'display just the first substring')
+    // .option('-s, --separator <char>', 'separator character', ',')
+    .action(function () { return __awaiter(void 0, void 0, void 0, function () {
+    var createOption, projectSettings, moduleSettings;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, (0, prompts_1.default)({
-                    type: 'text',
-                    name: 'value',
-                    message: 'Project Name  ',
+                    type: 'select',
+                    name: 'createOption',
+                    message: 'Pick colors',
+                    choices: [
+                        { title: 'Project', value: 'project' },
+                        { title: 'Module', value: 'module' },
+                    ],
                 })];
             case 1:
-                projectName = _a.sent();
+                createOption = _a.sent();
+                if (!(createOption.createOption === 'project')) return [3 /*break*/, 3];
+                return [4 /*yield*/, (0, prompts_1.default)([
+                        {
+                            type: 'text',
+                            name: 'projectName',
+                            message: 'Project Name',
+                        },
+                        {
+                            type: 'number',
+                            name: 'serverPort',
+                            message: 'API Server port'
+                        },
+                        {
+                            type: 'text',
+                            name: 'dbName',
+                            message: 'Db Name',
+                        },
+                        {
+                            type: 'text',
+                            name: 'dbHost',
+                            message: 'Db Host',
+                        },
+                        {
+                            type: 'text',
+                            name: 'dbPort',
+                            message: 'Db Port',
+                        },
+                        {
+                            type: 'text',
+                            name: 'dbUser',
+                            message: 'Db User',
+                        },
+                        {
+                            type: 'text',
+                            name: 'dbPassword',
+                            message: 'Db Password',
+                        },
+                    ])];
+            case 2:
+                projectSettings = _a.sent();
                 (0, initSerafProject_1.initSerafProject)({
                     config: {
-                        api: 'express',
-                        db: 'mongodb',
-                        projectName: projectName.value,
-                        path: path_1.default.resolve(process.cwd(), "")
-                    }
+                        api: {
+                            apiType: 'express',
+                            serverPort: projectSettings.serverPort
+                        },
+                        db: {
+                            dbName: projectSettings.dbName,
+                            dbType: "mongodb",
+                            host: projectSettings.dbHost,
+                            password: projectSettings.dbPassword,
+                            port: projectSettings.dbPort,
+                            user: projectSettings.dbUser
+                        },
+                        projectName: projectSettings.projectName,
+                    },
+                    path: path_1.default.resolve(process.cwd(), "")
                 });
-                console.log(projectName.value);
-                return [2 /*return*/];
+                return [3 /*break*/, 5];
+            case 3:
+                if (!(createOption.createOption === 'module')) return [3 /*break*/, 5];
+                return [4 /*yield*/, (0, prompts_1.default)([
+                        {
+                            type: 'text',
+                            name: 'moduleName',
+                            message: 'Module Name',
+                        },
+                        {
+                            type: 'text',
+                            name: 'moduleInterfacePath',
+                            message: 'Module Interface Path'
+                        }
+                    ])];
+            case 4:
+                moduleSettings = _a.sent();
+                _a.label = 5;
+            case 5: return [2 /*return*/];
         }
     });
 }); });
