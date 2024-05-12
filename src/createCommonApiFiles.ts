@@ -1,8 +1,6 @@
 import path from "path"
 import fs from "fs"
 
-
-
 const createCommonModelsApiFiles = (data: {
   commonApiPath: string
 }) => {
