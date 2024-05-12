@@ -3,6 +3,20 @@ import fs from 'fs'
 import { installNpmPackage } from './utils'
 import { IDbConfig } from './api-module'
 
+/* 
+MONGO_URL=mongodb://${data.dbConfig.host}:${data.dbConfig.port}
+SERVER_PORT=${data.serverPort}
+*/
+
+
+export const appendDotenvVar = (data: {
+  projectPath: string,
+  key: string,
+  value: string
+}) => {
+
+}
+
 
 export const setupApiDotenv = (data: {
   projectPath: string,
@@ -17,8 +31,8 @@ export const setupApiDotenv = (data: {
   const dotenvPath = path.resolve(data.projectPath, `.env`)
 
   fs.writeFile(dotenvPath, `
-    MONGO_URL=mongodb://${data.dbConfig.host}:${data.dbConfig.port}
-    SERVER_PORT=${data.serverPort}
+  MONGO_URL=mongodb://${data.dbConfig.host}:${data.dbConfig.port}
+  SERVER_PORT=${data.serverPort}
   `, (err) => {
     if (err) {
       console.error('Error writing file:', err);

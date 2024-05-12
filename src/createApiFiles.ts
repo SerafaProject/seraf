@@ -69,13 +69,6 @@ startServer()
 
 }
 
-const addDotenvVar = (data: {
-  projectPath: string,
-  key: string,
-  value: string
-}) => {
-
-}
 
 
 const setupMongoose = (data: {
