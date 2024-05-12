@@ -6,30 +6,6 @@ import { setupDevEnv } from "./setupDevEnv";
 import { installNpmPackage } from "./utils";
 
 
-const setupApiDotenv = (data: {
-  projectPath: string,
-  dbConfig: IDbConfig,
-  serverPort: number
-}) => {
-  installNpmPackage({
-    packageName: 'dotenv',
-    projectPath: data.projectPath
-  })
-
-  const dotenvPath = path.resolve(data.projectPath, `.env`)
-
-  fs.writeFile(dotenvPath, `
-    MONGO_URL=mongodb://${data.dbConfig.host}:${data.dbConfig.port}
-    SERVER_PORT=${data.serverPort}
-  `, (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${dotenvPath}`);
-    }
-  });
-}
-
 
 
 const setupExpress = (data: {
@@ -98,7 +74,17 @@ const addDotenvVar = (data: {
   key: string,
   value: string
 }) => {
-  
+
+}
+
+
+const setupMongoose = (data: {
+  apiPath: string
+}) => {
+  installNpmPackage({
+    packageName: 'mongoose',
+    projectPath: data.apiPath
+  })
 }
 
 export const createApiFiles = (data: {
@@ -111,34 +97,29 @@ export const createApiFiles = (data: {
   const apiPath = path.resolve(data.path, "api")
   fs.mkdirSync(apiPath)
 
-  // Create DotEnv Files
-  setupApiDotenv({
-    projectPath: apiPath,
-    dbConfig: data.dbConfig,
-    serverPort: data.serverPort
-  })
 
   // Create API src folder
   const srcPath = path.resolve(apiPath, "src")
   fs.mkdirSync(srcPath)
+
+  setupMongoose({
+    apiPath: apiPath
+  })
 
   setupExpress({
     apiPath: apiPath,
     srcPath: srcPath
   })
 
-
-  installNpmPackage({
-    packageName: 'mongoose',
-    projectPath: apiPath
-  })
-
   createApiModulesFiles({
     srcPath: srcPath
   })
 
+  // Setup Server Port
   setupDevEnv({
-    projectPath: apiPath
+    projectPath: apiPath,
+    dbConfig: data.dbConfig,
+    serverPort: data.serverPort
   })
 
   if (data.type === 'express') {

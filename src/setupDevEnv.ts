@@ -1,12 +1,37 @@
 import path from 'path'
 import fs from 'fs'
 import { installNpmPackage } from './utils'
+import { IDbConfig } from './api-module'
+
+
+export const setupApiDotenv = (data: {
+  projectPath: string,
+  dbConfig: IDbConfig,
+  serverPort: number
+}) => {
+  installNpmPackage({
+    packageName: 'dotenv',
+    projectPath: data.projectPath
+  })
+
+  const dotenvPath = path.resolve(data.projectPath, `.env`)
+
+  fs.writeFile(dotenvPath, `
+    MONGO_URL=mongodb://${data.dbConfig.host}:${data.dbConfig.port}
+    SERVER_PORT=${data.serverPort}
+  `, (err) => {
+    if (err) {
+      console.error('Error writing file:', err);
+    } else {
+      console.log(`Code written to file: ${dotenvPath}`);
+    }
+  });
+}
 
 const setupTypescript = (data: {
   projectPath: string
 }) => {
   const tsConfigPath = path.resolve(data.projectPath, `tsconfig.json`)
-  const srcPath = path.resolve(data.projectPath, `src`)
 
   installNpmPackage({
     packageName: "typescript",
@@ -19,8 +44,6 @@ const setupTypescript = (data: {
     projectPath: data.projectPath,
     dev: true
   })
-
-
 
   fs.writeFile(tsConfigPath, `
   {
@@ -62,9 +85,16 @@ const setupTypescript = (data: {
 
 
 export const setupDevEnv = (data: {
-  projectPath: string
+  projectPath: string,
+  dbConfig: IDbConfig,
+  serverPort: number
 }) => {
   setupTypescript({
     projectPath: data.projectPath
+  })
+  setupApiDotenv({
+    dbConfig: data.dbConfig,
+    projectPath: data.projectPath,
+    serverPort: data.serverPort
   })
 }
