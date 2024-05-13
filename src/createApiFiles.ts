@@ -90,8 +90,28 @@ const setupMongoose = (data: {
   console.log(data.apiPath)
   appendDotenvVar({
     projectPath: data.apiPath,
-    key: 'MONGO_URL',
+    key: 'MONGODB_DBNAME',
+    value: `${data.dbConfig.dbName}`
+  })
+  appendDotenvVar({
+    projectPath: data.apiPath,
+    key: 'MONGODB_DBURL',
     value: `mongodb://${data.dbConfig.host}:${data.dbConfig.port}`
+  })
+  appendDotenvVar({
+    projectPath: data.apiPath,
+    key: 'MONGODB_PORT',
+    value: `${data.dbConfig.port}`
+  })
+  appendDotenvVar({
+    projectPath: data.apiPath,
+    key: 'MONGODB_USER',
+    value: `${data.dbConfig.user}`
+  })
+  appendDotenvVar({
+    projectPath: data.apiPath,
+    key: 'MONGODB_PASSWORD',
+    value: `${data.dbConfig.password}`
   })
 }
 
