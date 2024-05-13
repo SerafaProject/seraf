@@ -1,8 +1,8 @@
 import path from "path";
 import fs from 'fs'
-import { IApiTypes, IDbConfig } from "./api-module";
+import { IApiConfig, IApiTypes, IDbConfig } from "./api-module";
 import { createApiModulesFiles } from "./createApiModulesFiles";
-import { setupDevEnv } from "./setupDevEnv";
+import { appendDotenvVar, setupDevEnv } from "./setupDevEnv";
 import { installNpmPackage } from "./utils";
 
 
@@ -10,7 +10,8 @@ import { installNpmPackage } from "./utils";
 
 const setupExpress = (data: {
   apiPath: string,
-  srcPath: string
+  srcPath: string,
+  apiConfig: IApiConfig
 }) => {
   installNpmPackage({
     packageName: 'express',
@@ -21,6 +22,12 @@ const setupExpress = (data: {
     packageName: '@types/express',
     projectPath: data.apiPath,
     dev: true
+  })
+
+  appendDotenvVar({
+    projectPath: data.apiPath,
+    key: 'SERVER_PORT',
+    value: data.apiConfig.serverPort.toString()
   })
 
   const expressInitialSetup =
@@ -72,11 +79,19 @@ startServer()
 
 
 const setupMongoose = (data: {
-  apiPath: string
+  apiPath: string,
+  dbConfig: IDbConfig
 }) => {
   installNpmPackage({
     packageName: 'mongoose',
     projectPath: data.apiPath
+  })
+  console.log("Setup Mongoose")
+  console.log(data.apiPath)
+  appendDotenvVar({
+    projectPath: data.apiPath,
+    key: 'MONGO_URL',
+    value: `mongodb://${data.dbConfig.host}:${data.dbConfig.port}`
   })
 }
 
@@ -87,38 +102,40 @@ export const createApiFiles = (data: {
   dbConfig: IDbConfig
 }) => {
   // Create API Folder
+  console.log("Create API Path")
   const apiPath = path.resolve(data.path, "api")
   fs.mkdirSync(apiPath)
-
-
+  console.log(apiPath)
+  
   // Create API src folder
   const srcPath = path.resolve(apiPath, "src")
   fs.mkdirSync(srcPath)
 
-  setupMongoose({
-    apiPath: apiPath
-  })
-
-  setupExpress({
-    apiPath: apiPath,
-    srcPath: srcPath
-  })
-
-  createApiModulesFiles({
-    srcPath: srcPath
-  })
-
-  // Setup Server Port
+  
   setupDevEnv({
     projectPath: apiPath,
     dbConfig: data.dbConfig,
     serverPort: data.serverPort
   })
 
+
+  setupMongoose({
+    apiPath: apiPath,
+    dbConfig: data.dbConfig
+  })
+
+  createApiModulesFiles({
+    srcPath: srcPath
+  })
+
   if (data.type === 'express') {
     setupExpress({
       apiPath: apiPath,
-      srcPath: srcPath
+      srcPath: srcPath,
+      apiConfig: {
+        apiType: 'express',
+        serverPort: data.serverPort
+      }
     })
   } else {
     throw new Error(`Invalid ApiType ${data.type}`)
