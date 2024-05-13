@@ -4,18 +4,28 @@ import { installNpmPackage } from './utils'
 import { IDbConfig } from './api-module'
 
 /* 
-MONGO_URL=mongodb://${data.dbConfig.host}:${data.dbConfig.port}
+MONGO_URL=
 SERVER_PORT=${data.serverPort}
 */
-
 
 export const appendDotenvVar = (data: {
   projectPath: string,
   key: string,
   value: string
 }) => {
+  // Lê o conteúdo atual do arquivo
+    // Resolve the absolute path to the .env file
+  const dotenvPath = path.resolve(data.projectPath, '.env');
+
+    // Construct the string to append
+  const entry = `${data.key}=${data.value}\n`;
+  
+    // Append the entry to the .env file
+  fs.appendFileSync(dotenvPath, entry);
+
 
 }
+
 
 
 export const setupApiDotenv = (data: {
@@ -30,10 +40,7 @@ export const setupApiDotenv = (data: {
 
   const dotenvPath = path.resolve(data.projectPath, `.env`)
 
-  fs.writeFile(dotenvPath, `
-  MONGO_URL=mongodb://${data.dbConfig.host}:${data.dbConfig.port}
-  SERVER_PORT=${data.serverPort}
-  `, (err) => {
+  fs.writeFile(dotenvPath, ``, (err) => {
     if (err) {
       console.error('Error writing file:', err);
     } else {
