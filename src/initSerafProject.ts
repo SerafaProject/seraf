@@ -3,7 +3,6 @@ import path from 'path'
 
 import { ISerafProjectConfig } from './types'
 import { createApiFiles } from './createApiFiles'
-import { installNpmPackage } from './utils'
 
 
 const createProjectFolder = (data: {
@@ -38,9 +37,6 @@ export const initSerafProject = (data: {
   createProjectFolder({
     projectPath: projectPath
   })
-
-
-
 
   createConfigFile({
     path: projectPath,

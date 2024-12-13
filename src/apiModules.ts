@@ -14,3 +14,12 @@ export const createApiModulesFiles = (data: {
     modulesPath: modulesPath
   })
 }
+
+
+export const appendToModulesIndex = (data: {
+  modulesPath: string,
+  value: string
+}) => {
+  const dotenvPath = path.resolve(data.modulesPath, 'index.ts');
+  fs.appendFileSync(dotenvPath, data.value);
+}

@@ -1,5 +1,6 @@
 import path from "path"
 import fs from "fs"
+import { appendToModulesIndex } from "./apiModules"
 
 const createCommonModelsApiFiles = (data: {
   commonApiPath: string
@@ -48,8 +49,7 @@ const createCommonUtilsApiFiles = (data: {
 
   const validateCommonPath = path.resolve(utilsApiPath, `ValidateCommon.ts`)
   fs.writeFile(validateCommonPath, `
-  import { ICommon } from "@/modules/common";
-
+  import { ICommon } from "../models";
   export const validateCommon = (common: Partial<ICommon>): void => {
     const { id, createdAt, status, updatedAt } = common
     if (!id) throw new Error('Id is required')

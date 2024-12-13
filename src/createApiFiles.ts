@@ -1,7 +1,7 @@
 import path from "path";
 import fs from 'fs'
 import { IApiConfig, IApiTypes, IDbConfig } from "./api-module";
-import { createApiModulesFiles } from "./createApiModulesFiles";
+import { createApiModulesFiles } from "./apiModules";
 import { appendDotenvVar, setupDevEnv } from "./setupDevEnv";
 import { installNpmPackage } from "./utils";
 
@@ -15,13 +15,27 @@ const setupExpress = (data: {
 }) => {
   installNpmPackage({
     packageName: 'express',
-    projectPath: data.apiPath
+    projectPath: data.apiPath,
+    version: '^4.21.2'
+  })
+
+  installNpmPackage({
+    packageName: 'cors',
+    projectPath:  data.apiPath,
+    version: '^2.8.5'
+  })
+  installNpmPackage({
+    packageName: '@types/cors',
+    projectPath:  data.apiPath,
+    version: '^2.8.17',
+    dev: true
   })
 
   installNpmPackage({
     packageName: '@types/express',
     projectPath: data.apiPath,
-    dev: true
+    dev: true,
+    version: '^5.0.0'
   })
 
   appendDotenvVar({
@@ -31,36 +45,38 @@ const setupExpress = (data: {
   })
 
   const expressInitialSetup =
-    `
-import express, { Request, Response } from 'express'
-import { envSetup } from '@/envSetup'
-import mongoose from 'mongoose'
-// import { exampleRoutes } from '@/application/example'
-// import { userRoutes } from '@/application/user'
-// import { sessionRoutes } from '@/application/session'
-// import { videoRoutes } from '@/application/video'
+`
+import cors from "cors"
+import express from "express"
+import mongoose from "mongoose"
 
 const startServer = async () => {
-console.log('Starting server')
-try {
-envSetup()
-await mongoose.connect(process.env.MONGO_URL ?? '')
-const app = express()
-app.use(express.json())
-// app.use('/example', exampleRoutes)
-// app.use('/user', userRoutes)
-// app.use('/session', sessionRoutes)
-// app.use('/video', videoRoutes)
+  console.log('Starting server')
+  try {
+    
+    await mongoose.connect(\`mongodb://\${process.env.MONGODB_HOST}:\${process.env.MONGODB_PORT}/\${process.env.MONGODB_DBNAME}\`)
+    const app = express()
+    app.use(cors())
+    // BEGIN-ROUTES
+    // app.use(express.json())
+    // app.use('/example', exampleRoutes)
+    // app.use('/track', trackRoutes)
+    // app.use('/subject', subjectRoutes)
+    // app.use('/question', questionRoutes)
+    // app.use('/question-set', questionSetRoutes)
+    // app.use('/topic', topicRoutes)
+    //END-ROUTES
 
-app.listen(process.env.SERVER_PORT, () => {
-  console.log(\`Backend Template listening on port ${process.env.SERVER_PORT}\`)
-})
-console.log('MongoDB connected')
-} catch (error) {
-console.log(error)
-}
-}
+    // app.use('/user', userRoutes)
 
+    app.listen(process.env.SERVER_PORT, () => {
+      console.log(\`QuironStdAPI listening on port \${process.env.SERVER_PORT}\`)
+    })
+    console.log('MongoDB connected')
+  } catch (error) {
+    console.log(error)
+  }
+}
 
 startServer()
 `;
@@ -84,7 +100,8 @@ const setupMongoose = (data: {
 }) => {
   installNpmPackage({
     packageName: 'mongoose',
-    projectPath: data.apiPath
+    projectPath: data.apiPath,
+    version: '^8.9.0'
   })
   console.log("Setup Mongoose")
   console.log(data.apiPath)
@@ -95,8 +112,8 @@ const setupMongoose = (data: {
   })
   appendDotenvVar({
     projectPath: data.apiPath,
-    key: 'MONGODB_DBURL',
-    value: `mongodb://${data.dbConfig.host}:${data.dbConfig.port}`
+    key: 'MONGODB_HOST',
+    value: data.dbConfig.host
   })
   appendDotenvVar({
     projectPath: data.apiPath,

@@ -16,13 +16,10 @@ export const appendDotenvVar = (data: {
   // Lê o conteúdo atual do arquivo
     // Resolve the absolute path to the .env file
   const dotenvPath = path.resolve(data.projectPath, '.env');
-
     // Construct the string to append
   const entry = `${data.key}=${data.value}\n`;
-  
     // Append the entry to the .env file
   fs.appendFileSync(dotenvPath, entry);
-
 
 }
 
@@ -35,7 +32,8 @@ export const setupApiDotenv = (data: {
 }) => {
   installNpmPackage({
     packageName: 'dotenv',
-    projectPath: data.projectPath
+    projectPath: data.projectPath,
+    version: '^16.4.7'
   })
 
   const dotenvPath = path.resolve(data.projectPath, `.env`)
@@ -57,44 +55,32 @@ const setupTypescript = (data: {
   installNpmPackage({
     packageName: "typescript",
     projectPath: data.projectPath,
-    dev: true
+    dev: true,
+    version: '^5.7.2'
   })
 
   installNpmPackage({
     packageName: "@types/node",
     projectPath: data.projectPath,
-    dev: true
+    dev: true,
+    version: '^22.10.2'
   })
 
   fs.writeFile(tsConfigPath, `
-  {
-    "compilerOptions": {
-      "target": "es2016",
-      "lib": [
-        "es6"
-      ],
-      "module": "commonjs",
-      "rootDir": "src",
-      "moduleResolution": "node",
-      "baseUrl": "src",
-      "paths": {
-        "@/*": [
-          "*"
-        ],
-        "*": [
-          "node_modules/*"
-        ]
-      },
-      "resolveJsonModule": true,
-      "allowJs": true,
-      "outDir": "build",
-      "esModuleInterop": true,
-      "forceConsistentCasingInFileNames": true,
-      "strict": true,
-      "noImplicitAny": true,
-      "skipLibCheck": true
-    }
+{
+  "compilerOptions": {
+    "target": "es5",                          
+    "module": "commonjs",                    
+    "lib": ["es6"],                     
+    "allowJs": true,
+    "outDir": "build",                          
+    "rootDir": "src",
+    "strict": true,         
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true
   }
+}
   `, (err) => {
     if (err) {
       console.error('Error writing file:', err);
