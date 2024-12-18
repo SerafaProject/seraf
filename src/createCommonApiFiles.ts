@@ -9,33 +9,19 @@ const createCommonModelsApiFiles = (data: {
   fs.mkdirSync(commonApiModelsPath)
 
   const commonModelPath = path.resolve(commonApiModelsPath, `ICommon.ts`)
-  fs.writeFile(commonModelPath, `
-  export type IStatus = 'active' | 'inactive'
+  fs.writeFileSync(commonModelPath, `
 
   export interface ICommon {
     id: string
     createdAt: Date
     updatedAt: Date
-    status: IStatus
   }
-  `, (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${commonModelPath}`);
-    }
-  });
+  `)
 
   const modelsIndexPath = path.resolve(commonApiModelsPath, `index.ts`)
-  fs.writeFile(modelsIndexPath, `
+  fs.writeFileSync(modelsIndexPath, `
   export * from './ICommon'
-  `, (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${modelsIndexPath}`);
-    }
-  });
+  `)
 
 
 
@@ -48,41 +34,29 @@ const createCommonUtilsApiFiles = (data: {
   fs.mkdirSync(utilsApiPath)
 
   const validateCommonPath = path.resolve(utilsApiPath, `ValidateCommon.ts`)
-  fs.writeFile(validateCommonPath, `
+  fs.writeFileSync(validateCommonPath, `
   import { ICommon } from "../models";
   export const validateCommon = (common: Partial<ICommon>): void => {
-    const { id, createdAt, status, updatedAt } = common
+    const { id, createdAt, updatedAt } = common
     if (!id) throw new Error('Id is required')
     if (!createdAt) throw new Error('CreatedAt is required')
-    if (!status) throw new Error('Status is required')
     if (!updatedAt) throw new Error('UpdatedAt is required')
   }
-  `, (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${validateCommonPath}`);
-    }
-  });
+  `)
 
 
 
 
   const utilsIndexPath = path.resolve(utilsApiPath, `index.ts`)
-  fs.writeFile(utilsIndexPath, `
+  fs.writeFileSync(utilsIndexPath, `
   export * from './ValidateCommon'
-  `, (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${utilsIndexPath}`);
-    }
-  });
+  `)
 }
 
 export const createCommonApiFiles = (data: {
   modulesPath: string
 }) => {
+  console.log("Setup Common API Files")
   const commonApiPath = path.resolve(data.modulesPath, "common")
   fs.mkdirSync(commonApiPath)
 
@@ -96,14 +70,8 @@ export const createCommonApiFiles = (data: {
 
   const commonIndexPath = path.resolve(commonApiPath, `index.ts`)
 
-  fs.writeFile(commonIndexPath, `
+  fs.writeFileSync(commonIndexPath, `
   export * from './models';
   export * from './utils';
-  `, (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${commonIndexPath}`);
-    }
-  });
+  `)
 }

@@ -5,9 +5,6 @@ import { createApiModulesFiles } from "./apiModules";
 import { appendDotenvVar, setupDevEnv } from "./setupDevEnv";
 import { installNpmPackage } from "./utils";
 
-
-
-
 const setupExpress = (data: {
   apiPath: string,
   srcPath: string,
@@ -57,8 +54,8 @@ const startServer = async () => {
     await mongoose.connect(\`mongodb://\${process.env.MONGODB_HOST}:\${process.env.MONGODB_PORT}/\${process.env.MONGODB_DBNAME}\`)
     const app = express()
     app.use(cors())
+    app.use(express.json())
     // BEGIN-ROUTES
-    // app.use(express.json())
     // app.use('/example', exampleRoutes)
     // app.use('/track', trackRoutes)
     // app.use('/subject', subjectRoutes)
@@ -82,13 +79,7 @@ startServer()
 `;
 
   const expressSetupPath = path.resolve(data.srcPath, "expressSetup.ts")
-  fs.writeFile(expressSetupPath, expressInitialSetup, (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${expressSetupPath}`);
-    }
-  });
+  fs.writeFileSync(expressSetupPath, expressInitialSetup)
 
 }
 
@@ -103,8 +94,7 @@ const setupMongoose = (data: {
     projectPath: data.apiPath,
     version: '^8.9.0'
   })
-  console.log("Setup Mongoose")
-  console.log(data.apiPath)
+
   appendDotenvVar({
     projectPath: data.apiPath,
     key: 'MONGODB_DBNAME',
@@ -139,33 +129,35 @@ export const createApiFiles = (data: {
   dbConfig: IDbConfig
 }) => {
   // Create API Folder
-  console.log("Create API Path")
+  console.log("Creating API folder")
   const apiPath = path.resolve(data.path, "api")
   fs.mkdirSync(apiPath)
   console.log(apiPath)
   
   // Create API src folder
+  console.log("Creating API src folder")
   const srcPath = path.resolve(apiPath, "src")
   fs.mkdirSync(srcPath)
 
-  
+  console.log("Creating develop env config")
   setupDevEnv({
     projectPath: apiPath,
     dbConfig: data.dbConfig,
     serverPort: data.serverPort
   })
 
-
+  console.log("Creating mongoose config")
   setupMongoose({
     apiPath: apiPath,
     dbConfig: data.dbConfig
   })
-
+  console.log("Creating API common module")
   createApiModulesFiles({
     srcPath: srcPath
   })
 
   if (data.type === 'express') {
+    console.log("Creating express config")
     setupExpress({
       apiPath: apiPath,
       srcPath: srcPath,

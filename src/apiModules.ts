@@ -15,7 +15,6 @@ export const createApiModulesFiles = (data: {
   })
 }
 
-
 export const appendToModulesIndex = (data: {
   modulesPath: string,
   value: string

@@ -3,28 +3,11 @@ import path from 'path'
 
 import { ISerafProjectConfig } from './types'
 import { createApiFiles } from './createApiFiles'
+import { performInstall } from './utils'
 
 
-const createProjectFolder = (data: {
-  projectPath: string
-}) => {
-  fs.mkdirSync(path.resolve(data.projectPath))
-}
 
-const createConfigFile = (data: {
-  config: ISerafProjectConfig,
-  path: string
-}) => {
-  const filePath = path.resolve(data.path, `seraf-project-config.json`)
 
-  fs.writeFile(filePath, JSON.stringify(data.config, null, 2), (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${filePath}`);
-    }
-  });
-}
 
 
 
@@ -33,16 +16,12 @@ export const initSerafProject = (data: {
   path: string
 }) => {
   const projectPath = path.resolve(data.path, data.config.projectName)
+  console.log("Creating project folder")
+  fs.mkdirSync(projectPath)
 
-  createProjectFolder({
-    projectPath: projectPath
-  })
-
-  createConfigFile({
-    path: projectPath,
-    config: data.config
-  })
-
+  console.log("Creating seraf-project-config.json")
+  const filePath = path.resolve(projectPath, `seraf-project-config.json`)
+  fs.writeFileSync(filePath, JSON.stringify(data.config, null, 2))
   createApiFiles({
     path: projectPath,
     serverPort: data.config.api.serverPort,

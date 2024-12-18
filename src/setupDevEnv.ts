@@ -14,11 +14,11 @@ export const appendDotenvVar = (data: {
   value: string
 }) => {
   // Lê o conteúdo atual do arquivo
-    // Resolve the absolute path to the .env file
+  // Resolve the absolute path to the .env file
   const dotenvPath = path.resolve(data.projectPath, '.env');
-    // Construct the string to append
+  // Construct the string to append
   const entry = `${data.key}=${data.value}\n`;
-    // Append the entry to the .env file
+  // Append the entry to the .env file
   fs.appendFileSync(dotenvPath, entry);
 
 }
@@ -38,13 +38,7 @@ export const setupApiDotenv = (data: {
 
   const dotenvPath = path.resolve(data.projectPath, `.env`)
 
-  fs.writeFile(dotenvPath, ``, (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${dotenvPath}`);
-    }
-  });
+  fs.writeFileSync(dotenvPath, ``)
 }
 
 const setupTypescript = (data: {
@@ -66,7 +60,7 @@ const setupTypescript = (data: {
     version: '^22.10.2'
   })
 
-  fs.writeFile(tsConfigPath, `
+  fs.writeFileSync(tsConfigPath, `
 {
   "compilerOptions": {
     "target": "es5",                          
@@ -81,13 +75,7 @@ const setupTypescript = (data: {
     "resolveJsonModule": true
   }
 }
-  `, (err) => {
-    if (err) {
-      console.error('Error writing file:', err);
-    } else {
-      console.log(`Code written to file: ${tsConfigPath}`);
-    }
-  });
+  `)
 }
 
 
@@ -103,5 +91,10 @@ export const setupDevEnv = (data: {
     dbConfig: data.dbConfig,
     projectPath: data.projectPath,
     serverPort: data.serverPort
+  })
+  installNpmPackage({
+    projectPath: data.projectPath,
+    packageName: 'uuid',
+    version: "^11.0.3"
   })
 }
