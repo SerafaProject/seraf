@@ -394,9 +394,8 @@ export class Create${basicModelName}Controller {
 
   fs.appendFileSync(useCasesIndexPath, `export * from './create-${data.moduleName}'\n`)
 
-  fs.appendFileSync(pathIndex, "export * from './use-cases'\n")
 
- 
+
 
 
   const listUseCasePath = path.resolve(useCasesPath, `list-${data.moduleName}`)
@@ -464,10 +463,10 @@ export class List${basicModelName}UseCase {
   }
 }
 `
-fs.writeFileSync(listUseCaseImplementationPath, listUseCaseImplementation)
+  fs.writeFileSync(listUseCaseImplementationPath, listUseCaseImplementation)
 
-const listUseCaseControllerPath = path.resolve(listUseCasePath, "Controller.ts")
-let listUseCaseController = `
+  const listUseCaseControllerPath = path.resolve(listUseCasePath, "Controller.ts")
+  let listUseCaseController = `
 import { Request, Response } from "express"
 import { List${basicModelName}UseCase } from "./UseCase"
 
@@ -496,11 +495,11 @@ export class List${basicModelName}Controller {
 }
 `
 
-fs.writeFileSync(listUseCaseControllerPath, listUseCaseController)
-fs.appendFileSync(listUseCaseIndexPath, "export * from './Controller'\n")
+  fs.writeFileSync(listUseCaseControllerPath, listUseCaseController)
+  fs.appendFileSync(listUseCaseIndexPath, "export * from './Controller'\n")
 
-const listUseCaseSetupControllerPath = path.resolve(listUseCasePath, "setupController.ts")
-const listUseCaseSetupController = `
+  const listUseCaseSetupControllerPath = path.resolve(listUseCasePath, "setupController.ts")
+  const listUseCaseSetupController = `
 import { ${basicModelName}MongooseRepository } from "../../repositories"
 import { List${basicModelName}Controller } from "./Controller"
 import { List${basicModelName}UseCase } from "./UseCase"
@@ -520,43 +519,213 @@ export const setupList${basicModelName}Controller = () => {
   }
 }
 `
-fs.writeFileSync(listUseCaseSetupControllerPath, listUseCaseSetupController)
-fs.appendFileSync(listUseCaseIndexPath, "export * from './setupController'\n")
+  fs.writeFileSync(listUseCaseSetupControllerPath, listUseCaseSetupController)
+  fs.appendFileSync(listUseCaseIndexPath, "export * from './setupController'\n")
 
-fs.appendFileSync(useCasesIndexPath, `export * from './list-${data.moduleName}'\n`)
+  fs.appendFileSync(useCasesIndexPath, `export * from './list-${data.moduleName}'\n`)
 
 
+  const updateUseCasePath = path.resolve(useCasesPath, `update-${data.moduleName}`)
+  fs.mkdirSync(updateUseCasePath)
+  const updateUseCaseIndexPath = path.resolve(updateUseCasePath, "index.ts")
 
-const routesPath = path.resolve(data.path, "routes")
-fs.mkdirSync(routesPath)
-const moduleRoutesPath = path.resolve(routesPath, `${data.moduleName}ExpressRoutes.ts`)
+  const updateUseCaseTypesPath = path.resolve(updateUseCasePath, "types")
+  fs.mkdirSync(updateUseCaseTypesPath)
+  const updateUseCaseTypesIndexPath = path.resolve(updateUseCaseTypesPath, "index.ts")
 
-const moduleRoutes = `
-import express, { Request, Response } from 'express';
-import { setupCreate${basicModelName}Controller } from '../use-cases';
-import { setupListUserController } from '../use-cases';
+  let updateUseCaseRequestObj = `
+export interface IRequest {
+  id: string\n`
 
-const router = express.Router();
+  for (let i = 0; i < keyValueArray.length; i++) {
+    const keyValue = keyValueArray[i]
+    updateUseCaseRequestObj += `${keyValue.key}?: ${keyValue.value}\n`
+  }
 
-/* User Routes */
-router.post('/',(req: Request, res: Response) => {
-const { create${basicModelName}Controller } = setupCreate${basicModelName}Controller()
-create${basicModelName}Controller.handle(req, res)
-})
+  updateUseCaseRequestObj += `
+}\n`
+  const updateUseCaseRequestObjPath = path.resolve(updateUseCaseTypesPath, "IRequest.ts")
+  fs.writeFileSync(updateUseCaseRequestObjPath, updateUseCaseRequestObj)
+  fs.appendFileSync(updateUseCaseTypesIndexPath, "export * from './IRequest' \n")
 
-router.get('/',(req: Request, res: Response) => {
-  const { list${basicModelName}Controller } = setupList${basicModelName}Controller()
-  list${basicModelName}Controller.handle(req, res)
-})
+  const updateUseCaseResponseObjPath = path.resolve(updateUseCaseTypesPath, "IResponse.ts")
 
-export { router as ${data.moduleName}ExpressRoutes }
+  const updateUseCaseResponse = `
+import { I${basicModelName} } from "../../../models";
+
+export interface IResponse {
+${data.moduleName}: I${basicModelName}
+}
+`
+  fs.writeFileSync(updateUseCaseResponseObjPath, updateUseCaseResponse)
+  fs.appendFileSync(updateUseCaseTypesIndexPath, "export * from './IResponse'\n")
+
+  const updateUseCaseImplementationPath = path.resolve(updateUseCasePath, "UseCase.ts")
+  let updateUseCaseImplementation = `
+
+  import { I${basicModelName} } from "../../models"
+  import { I${basicModelName}Repository } from "../../repositories"
+  import { validate${basicModelName} } from "../../utils"
+  import { IRequest, IResponse } from "./types"
+  
+  export class Update${basicModelName}UseCase {
+    private readonly ${data.moduleName}Repository: I${basicModelName}Repository
+    constructor(
+      data: {
+        ${data.moduleName}Repository: I${basicModelName}Repository
+      }
+    ) {
+      this.${data.moduleName}Repository = data.${data.moduleName}Repository
+    }
+  
+    async execute(input: IRequest): Promise<IResponse> {
+      console.log('input', input)
+      if (!input.id)
+        throw new Error("Id is a required field")
+  
+      const prev${basicModelName} = await this.${data.moduleName}Repository.findById({
+        id: input.id
+      })
+  
+      if(!prev${basicModelName}){
+        throw new Error("${basicModelName} not found")
+      }
+  
+      const ${data.moduleName}ToSave: Partial<I${basicModelName}> = {
+        ...prev${basicModelName},`
+        for(let i = 0; i < keyValueArray.length; i++) {
+          const keyValue = keyValueArray[i]
+        updateUseCaseImplementation += `${keyValue.key}: input.${keyValue.key} ? input.${keyValue.key}: prev${basicModelName}.${keyValue.key},`
+        }
+        updateUseCaseImplementation += `
+        updatedAt: new Date()
+      }
+      const validated${basicModelName} = validate${basicModelName}(${data.moduleName}ToSave)
+  
+      const ${data.moduleName} = await this.${data.moduleName}Repository.update({
+        ${data.moduleName}: validated${basicModelName}
+      })
+  
+      if(!${data.moduleName}){
+        throw new Error("Error updating ${basicModelName}")
+      }
+  
+      return {
+        ${data.moduleName}
+      }
+    }
+  }
+  
+`
+  fs.writeFileSync(updateUseCaseImplementationPath, updateUseCaseImplementation)
+
+  const updateUseCaseControllerPath = path.resolve(updateUseCasePath, "Controller.ts")
+  let updateUseCaseController = `
+import { Request, Response } from "express"
+import { Update${basicModelName}UseCase } from "./UseCase"
+
+export class Update${basicModelName}Controller {
+  private readonly update${basicModelName}: Update${basicModelName}UseCase
+  constructor(data: {
+    update${basicModelName}: Update${basicModelName}UseCase
+  }) {
+    this.update${basicModelName} = data.update${basicModelName}
+
+  }
+
+  async handle(request: Request, response: Response): Promise<any> {
+    try {
+      const { body, params } = request
+      const ${data.moduleName}Update = await this.update${basicModelName}.execute({
+          id: params.id,\n`
+  for (let i = 0; i < keyValueArray.length; i++) {
+    const keyValue = keyValueArray[i]
+    updateUseCaseController += `${keyValue.key}: body.${keyValue.key},\n`
+  }
+  updateUseCaseController += `          
+      })
+      return response.status(200).json(${data.moduleName}Update)
+    } catch (error: any) {
+      return response.status(400).json({
+        message: error.message || 'Unexpected error.'
+      })
+    }
+  }
+}`
+
+  fs.writeFileSync(updateUseCaseControllerPath, updateUseCaseController)
+  fs.appendFileSync(updateUseCaseIndexPath, "export * from './Controller'\n")
+
+  const updateUseCaseSetupControllerPath = path.resolve(updateUseCasePath, "setupController.ts")
+  const updateUseCaseSetupController = `
+import { ${basicModelName}MongooseRepository } from "../../repositories"
+import { Update${basicModelName}Controller } from "./Controller"
+import { Update${basicModelName}UseCase } from "./UseCase"
+
+export const setupUpdate${basicModelName}Controller = () => {
+  const useCase = new Update${basicModelName}UseCase({
+    ${data.moduleName}Repository: new ${basicModelName}MongooseRepository()
+  })
+
+  const controller = new Update${basicModelName}Controller({
+    update${basicModelName}: useCase
+  })
+
+
+  return {
+    update${basicModelName}Controller: controller,
+  }
+}
 `
 
-fs.writeFileSync(moduleRoutesPath, moduleRoutes)
+  fs.writeFileSync(updateUseCaseSetupControllerPath, updateUseCaseSetupController)
+  fs.appendFileSync(updateUseCaseIndexPath, "export * from './setupController'\n")
 
-const moduleRoutesIndexPath = path.resolve(routesPath, "index.ts")
-fs.appendFileSync(moduleRoutesIndexPath, `export * from './${data.moduleName}ExpressRoutes' \n`)
-fs.appendFileSync(pathIndex, "export * from './routes'\n")
+  fs.appendFileSync(useCasesIndexPath, `export * from './update-${data.moduleName}'\n`)
+
+
+  const routesPath = path.resolve(data.path, "routes")
+  fs.mkdirSync(routesPath)
+  const moduleRoutesPath = path.resolve(routesPath, `${data.moduleName}ExpressRoutes.ts`)
+
+  const moduleRoutes = `
+  import express, { Request, Response } from 'express';
+  import { setupCreate${basicModelName}Controller,setupList${basicModelName}Controller, setupUpdate${basicModelName}Controller } from '../use-cases';
+  
+  const router = express.Router();
+  
+  /* ${basicModelName} Routes */
+  router.post('/',(req: Request, res: Response) => {
+  const { create${basicModelName}Controller } = setupCreate${basicModelName}Controller()
+  create${basicModelName}Controller.handle(req, res)
+  })
+  
+  router.get('/',(req: Request, res: Response) => {
+    const { list${basicModelName}Controller } = setupList${basicModelName}Controller()
+    list${basicModelName}Controller.handle(req, res)
+  })
+  
+  router.put('/:id',(req: Request, res: Response) => {
+    const { update${basicModelName}Controller } = setupUpdate${basicModelName}Controller()
+    update${basicModelName}Controller.handle(req, res)
+  })
+  
+  export { router as ${data.moduleName}ExpressRoutes }
+  
+`
+
+  fs.writeFileSync(moduleRoutesPath, moduleRoutes)
+
+  const moduleRoutesIndexPath = path.resolve(routesPath, "index.ts")
+  fs.appendFileSync(moduleRoutesIndexPath, `export * from './${data.moduleName}ExpressRoutes' \n`)
+  fs.appendFileSync(pathIndex, "export * from './routes'\n")
+  fs.appendFileSync(pathIndex, "export * from './use-cases'\n")
+
+
+
+
+
+
 
 }
 
