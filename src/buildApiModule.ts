@@ -79,6 +79,10 @@ export interface ${repoCrudInterfaceName} {
     update(data: {
            ${data.moduleName}: I${basicModelName}
     }): Promise<I${basicModelName} | undefined>
+
+    delete(data: {
+      id: string
+    }): Promise<void>
 }
 `
   fs.appendFileSync(repoInterfacesIndexPath, `export * from './${repoCrudInterfaceName}'\n`)
@@ -209,8 +213,22 @@ export class ${basicModelName}MongooseRepository implements ${repoCrudInterfaceN
       throw error
     }
   }
-}
 
+  async delete(data: {
+    id: string
+  }): Promise<void> {
+    try {
+      const deleted${basicModelName} = await ${basicModelName}Mongoose.deleteOne({
+        id: data.id
+      })
+      if(deleted${basicModelName}.deletedCount === 0){
+        throw new Error("${basicModelName} not found error")
+      }
+    } catch (error) {
+      throw error
+    }
+  }
+}
 `
 
   const mongooseRepositoryPath = path.resolve(repoImplementationsPath, `${basicModelName}MongooseRepository.ts`)
@@ -684,13 +702,136 @@ export const setupUpdate${basicModelName}Controller = () => {
   fs.appendFileSync(useCasesIndexPath, `export * from './update-${data.moduleName}'\n`)
 
 
+  const deleteUseCasePath = path.resolve(useCasesPath, `delete-${data.moduleName}`)
+  fs.mkdirSync(deleteUseCasePath)
+  const deleteUseCaseIndexPath = path.resolve(deleteUseCasePath, "index.ts")
+
+  const deleteUseCaseTypesPath = path.resolve(deleteUseCasePath, "types")
+  fs.mkdirSync(deleteUseCaseTypesPath)
+  const deleteUseCaseTypesIndexPath = path.resolve(deleteUseCaseTypesPath, "index.ts")
+
+  let deleteUseCaseRequestObj = `
+export interface IRequest {
+  id: string
+}`
+
+  const deleteUseCaseRequestObjPath = path.resolve(deleteUseCaseTypesPath, "IRequest.ts")
+  fs.writeFileSync(deleteUseCaseRequestObjPath, deleteUseCaseRequestObj)
+  fs.appendFileSync(deleteUseCaseTypesIndexPath, "export * from './IRequest' \n")
+
+  const deleteUseCaseResponseObjPath = path.resolve(deleteUseCaseTypesPath, "IResponse.ts")
+
+  const deleteUseCaseResponse = `
+import { I${basicModelName} } from "../../../models";
+
+export interface IResponse {
+
+}
+`
+  fs.writeFileSync(deleteUseCaseResponseObjPath, deleteUseCaseResponse)
+  fs.appendFileSync(deleteUseCaseTypesIndexPath, "export * from './IResponse'\n")
+
+  const deleteUseCaseImplementationPath = path.resolve(deleteUseCasePath, "UseCase.ts")
+  let deleteUseCaseImplementation = `
+
+  import { I${basicModelName}Repository } from "../../repositories"
+  import { IRequest, IResponse } from "./types"
+  
+  export class Delete${basicModelName}UseCase {
+    private readonly ${data.moduleName}Repository: I${basicModelName}Repository
+    constructor(
+      data: {
+        ${data.moduleName}Repository: I${basicModelName}Repository
+      }
+    ) {
+      this.${data.moduleName}Repository = data.${data.moduleName}Repository
+    }
+  
+    async execute(input: IRequest): Promise<IResponse> {
+      console.log('input', input)
+      if (!input.id)
+        throw new Error("Id is a required field")
+  
+
+  
+      await this.${data.moduleName}Repository.delete({
+        id: input.id
+      })
+  
+      return {}
+    }
+  }
+  
+`
+  fs.writeFileSync(deleteUseCaseImplementationPath, deleteUseCaseImplementation)
+
+  const deleteUseCaseControllerPath = path.resolve(deleteUseCasePath, "Controller.ts")
+  let deleteUseCaseController = `
+import { Request, Response } from "express"
+import { Delete${basicModelName}UseCase } from "./UseCase"
+
+export class Delete${basicModelName}Controller {
+  private readonly delete${basicModelName}: Delete${basicModelName}UseCase
+  constructor(data: {
+    delete${basicModelName}: Delete${basicModelName}UseCase
+  }) {
+    this.delete${basicModelName} = data.delete${basicModelName}
+
+  }
+
+  async handle(request: Request, response: Response): Promise<any> {
+    try {
+      const { body, params } = request
+      const ${data.moduleName}Delete = await this.delete${basicModelName}.execute({
+          id: params.id
+      })
+      return response.status(200).json(${data.moduleName}Delete)
+    } catch (error: any) {
+      return response.status(400).json({
+        message: error.message || 'Unexpected error.'
+      })
+    }
+  }
+}`
+
+  fs.writeFileSync(deleteUseCaseControllerPath, deleteUseCaseController)
+  fs.appendFileSync(deleteUseCaseIndexPath, "export * from './Controller'\n")
+
+  const deleteUseCaseSetupControllerPath = path.resolve(deleteUseCasePath, "setupController.ts")
+  const deleteUseCaseSetupController = `
+import { ${basicModelName}MongooseRepository } from "../../repositories"
+import { Delete${basicModelName}Controller } from "./Controller"
+import { Delete${basicModelName}UseCase } from "./UseCase"
+
+export const setupDelete${basicModelName}Controller = () => {
+  const useCase = new Delete${basicModelName}UseCase({
+    ${data.moduleName}Repository: new ${basicModelName}MongooseRepository()
+  })
+
+  const controller = new Delete${basicModelName}Controller({
+    delete${basicModelName}: useCase
+  })
+
+
+  return {
+    delete${basicModelName}Controller: controller,
+  }
+}
+`
+
+  fs.writeFileSync(deleteUseCaseSetupControllerPath, deleteUseCaseSetupController)
+  fs.appendFileSync(deleteUseCaseIndexPath, "export * from './setupController'\n")
+
+  fs.appendFileSync(useCasesIndexPath, `export * from './delete-${data.moduleName}'\n`)
+
+
   const routesPath = path.resolve(data.path, "routes")
   fs.mkdirSync(routesPath)
   const moduleRoutesPath = path.resolve(routesPath, `${data.moduleName}ExpressRoutes.ts`)
 
   const moduleRoutes = `
   import express, { Request, Response } from 'express';
-  import { setupCreate${basicModelName}Controller,setupList${basicModelName}Controller, setupUpdate${basicModelName}Controller } from '../use-cases';
+  import { setupCreate${basicModelName}Controller,setupList${basicModelName}Controller, setupUpdate${basicModelName}Controller, setupDelete${basicModelName}Controller } from '../use-cases';
   
   const router = express.Router();
   
@@ -709,6 +850,12 @@ export const setupUpdate${basicModelName}Controller = () => {
     const { update${basicModelName}Controller } = setupUpdate${basicModelName}Controller()
     update${basicModelName}Controller.handle(req, res)
   })
+
+  router.delete('/:id',(req: Request, res: Response) => {
+    const { delete${basicModelName}Controller } = setupDelete${basicModelName}Controller()
+    delete${basicModelName}Controller.handle(req, res)
+  })
+  
   
   export { router as ${data.moduleName}ExpressRoutes }
   
