@@ -26,7 +26,8 @@ export const initSerafProject = (data: {
     path: projectPath,
     serverPort: data.config.api.serverPort,
     type: data.config.api.apiType,
-    dbConfig: data.config.db
+    dbConfig: data.config.db,
+    projectName: data.config.projectName
   })
 }
 

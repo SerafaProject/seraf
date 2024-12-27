@@ -10,6 +10,18 @@ const setupExpress = (data: {
   srcPath: string,
   apiConfig: IApiConfig
 }) => {
+
+  installNpmPackage({
+    packageName: "swagger-ui-express",
+    projectPath: data.apiPath,
+    version: "^5.0.1",
+  })
+  installNpmPackage({
+    packageName: "@types/swagger-ui-express",
+    projectPath: data.apiPath,
+    version: "^4.1.7",
+    dev: true
+  })
   installNpmPackage({
     packageName: 'express',
     projectPath: data.apiPath,
@@ -18,12 +30,12 @@ const setupExpress = (data: {
 
   installNpmPackage({
     packageName: 'cors',
-    projectPath:  data.apiPath,
+    projectPath: data.apiPath,
     version: '^2.8.5'
   })
   installNpmPackage({
     packageName: '@types/cors',
-    projectPath:  data.apiPath,
+    projectPath: data.apiPath,
     version: '^2.8.17',
     dev: true
   })
@@ -42,10 +54,15 @@ const setupExpress = (data: {
   })
 
   const expressInitialSetup =
-`
+    `
 import cors from "cors"
 import express from "express"
 import mongoose from "mongoose"
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./../swagger.json";
+
+import dotenv from 'dotenv'
+dotenv.config()
 
 const startServer = async () => {
   console.log('Starting server')
@@ -55,6 +72,8 @@ const startServer = async () => {
     const app = express()
     app.use(cors())
     app.use(express.json())
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
     // BEGIN-ROUTES
     // app.use('/example', exampleRoutes)
     // app.use('/track', trackRoutes)
@@ -126,14 +145,44 @@ export const createApiFiles = (data: {
   type: IApiTypes,
   path: string,
   serverPort: number,
-  dbConfig: IDbConfig
+  dbConfig: IDbConfig,
+  projectName: string
 }) => {
   // Create API Folder
   console.log("Creating API folder")
   const apiPath = path.resolve(data.path, "api")
   fs.mkdirSync(apiPath)
   console.log(apiPath)
+  const swaggerJsonPath = path.resolve(apiPath, "swagger.json")
+  const swaggerJson = `
+  {
+  "openapi": "3.0.0",
+    "info": {
+      "title": "API ${data.projectName}",
+      "version": "1.0.0",
+      "description": ""
+    },
+    "servers": [
+      {
+        "url": "http://localhost:3333",
+        "description": "Servidor local"
+      }
+    ],
+    "paths": {
+     
+    
+    },
+    "components": {
+      "schemas": {
+        
+      }
+    }
+  }
   
+  `
+
+  fs.writeFileSync(swaggerJsonPath, swaggerJson)
+
   // Create API src folder
   console.log("Creating API src folder")
   const srcPath = path.resolve(apiPath, "src")
