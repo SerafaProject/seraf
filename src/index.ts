@@ -146,7 +146,18 @@ program.command('create')
             type: "text",
             name: "useCaseName",
             message: "Use Case Name"
-          }
+          },
+          {
+            type: "text",
+            name: "requestUrl",
+            message: "Request Url"
+          },
+          {
+            type: "text",
+            name: "method",
+            message: "Method: Get/Post/Put/Delete"
+          },
+          
         ]
       );
       const modulePath = path.resolve(currentPath, "api", "src", "modules", createUseCaseOptions.moduleName)
@@ -154,7 +165,9 @@ program.command('create')
       createUseCase({
         modulePath,
         moduleName: createUseCaseOptions.moduleName,
-        useCaseName: createUseCaseOptions.useCaseName
+        useCaseName: createUseCaseOptions.useCaseName,
+        method: createUseCaseOptions.method,
+        url: createUseCaseOptions.requestUrl
       })
     }
   })
@@ -457,17 +470,17 @@ A partir dessas instruções e exemplos, você terá todas as ferramentas para *
 
     for (let i = 0; i < parsedResponse.extraUseCases.length; i++) {
       const useCase = parsedResponse.extraUseCases[i]
-      createUseCase({
-        moduleName: useCase.entityName,
-        modulePath: path.resolve(currentPath, "api", "src", "modules"),
-        requestFileStirng: useCase.requestFIleString,
-        responseFIleString: useCase.responseFileString,
-        useCaseFileString: useCase.useCaseFileString,
-        useCaseName: useCase.useCaseName,
-        controllerFileStirng: useCase.controllerFileString,
-        setupControllerFIleString: useCase.setupControllerFIleString,
-        routeConfigFileString: useCase.routeConfigFileString
-      })
+      // createUseCase({
+      //   moduleName: useCase.entityName,
+      //   modulePath: path.resolve(currentPath, "api", "src", "modules"),
+      //   requestFileStirng: useCase.requestFIleString,
+      //   responseFIleString: useCase.responseFileString,
+      //   useCaseFileString: useCase.useCaseFileString,
+      //   useCaseName: useCase.useCaseName,
+      //   controllerFileStirng: useCase.controllerFileString,
+      //   setupControllerFIleString: useCase.setupControllerFIleString,
+      //   routeConfigFileString: useCase.routeConfigFileString
+      // })
 
     }
 

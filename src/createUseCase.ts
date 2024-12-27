@@ -1,5 +1,6 @@
 import path from 'path'
 import fs from 'fs'
+import { processFiles } from './tsHelper';
 
 
 export const useCaseRequestBlank = `
@@ -16,10 +17,10 @@ export const useCaseResponseBlank = `
 
 function formatToPascalCase(input: string): string {
     return input
-      .split('-')                                // Divide a string nos traços
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitaliza a primeira letra
-      .join('');                                 // Junta as palavras sem separador
-  }
+        .split('-')                                // Divide a string nos traços
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitaliza a primeira letra
+        .join('');                                 // Junta as palavras sem separador
+}
 
 
 export const useCaseBlank = (data: {
@@ -79,10 +80,39 @@ export class ${formatToPascalCase(data.useCaseName)}Controller {
 `
 }
 
+const setupControllerBlank = (data: {
+    useCaseName: string,
+    moduleName: string,
+}) => {
+    const basicModelName = `${data.moduleName[0].toUpperCase() + data.moduleName.slice(1, data.moduleName.length)}`
+    const pascalCaseName = formatToPascalCase(data.useCaseName)
+    const camelCaseName = `${pascalCaseName[0].toUpperCase() + pascalCaseName.slice(1, pascalCaseName.length)}`
+
+    return `
+    import { ${pascalCaseName}Controller } from "./Controller"
+    import { ${pascalCaseName}UseCase } from "./UseCase"
+    
+    export const setup${pascalCaseName}Controller = () => {
+      const useCase = new ${pascalCaseName}UseCase({
+      })
+    
+      const controller = new ${pascalCaseName}Controller({
+       ${camelCaseName}: useCase
+      })
+    
+      return {
+       ${camelCaseName}Controller: controller,
+      }
+    }
+    `
+}
+
 export const createUseCase = (data: {
     modulePath: string,
     moduleName: string,
     useCaseName: string,
+    method: 'get' | 'post' | 'put' | 'delete',
+    url: string
     useCaseFileString?: string,
     requestFileStirng?: string,
     responseFIleString?: string,
@@ -108,7 +138,7 @@ export const createUseCase = (data: {
         moduleName: data.moduleName,
         useCaseName: data.useCaseName
     }))
-    
+
     fs.appendFileSync(useCaseIndexPath, "export * from './Controller'\n")
 
     const useCaseTypesPath = path.resolve(useCasePath, "types")
@@ -126,18 +156,31 @@ export const createUseCase = (data: {
     fs.appendFileSync(typesIndexPath, "export * from './IResponse'\n")
 
 
-    // const setupControllerPath = path.resolve(useCasePath, "setupController.ts")
-    // fs.writeFileSync(setupControllerPath, data.setupControllerFIleString ? data.setupControllerFIleString : "")
-    // fs.appendFileSync(useCaseIndexPath, "export * from './setupController'\n")
+    const setupControllerPath = path.resolve(useCasePath, "setupController.ts")
+    fs.writeFileSync(setupControllerPath, data.setupControllerFIleString ? data.setupControllerFIleString : setupControllerBlank({
+        moduleName: data.moduleName,
+        useCaseName: data.useCaseName
+    }))
+    fs.appendFileSync(useCaseIndexPath, "export * from './setupController'\n")
 
 
-    // const routesPath = path.resolve(data.modulePath, "routes", `${data.moduleName}ExpressRoutes.ts`)
+    const routesPath = path.resolve(data.modulePath, "routes", `${data.moduleName}ExpressRoutes.ts`)
 
-    // const routes = fs.readFileSync(routesPath).toString()
-    // let routesEdited = routes.replace(`export { router as ${data.moduleName}ExpressRoutes };`, `\n
-    //     ${data.routeConfigFileString}\n
-    //     export { router as ${data.moduleName}ExpressRoutes };`)
+    const routes = fs.readFileSync(routesPath).toString()
+    const pascalCaseName = formatToPascalCase(data.useCaseName)
+    const camelCaseName = `${pascalCaseName[0].toUpperCase() + pascalCaseName.slice(1, pascalCaseName.length)}`
 
-    // fs.writeFileSync(routesPath, routesEdited)
+    let routesEdited = routes.replace(`const router = express.Router();`, `\n
+        const router = express.Router();
+        ${data.routeConfigFileString ? data.routeConfigFileString : `
+            router.${data.method}("${data.url}", (req: Request, res: Response) => {
+            const { ${camelCaseName}Controller } = setup${pascalCaseName}Controller();
+            ${camelCaseName}Controller.handle(req, res);
+        });
+            `}\n
+        `)
+
+    fs.writeFileSync(routesPath, routesEdited)
     fs.appendFileSync(useCasesIndexPath, `export * from './${data.useCaseName}'\n`)
+    processFiles()
 }
